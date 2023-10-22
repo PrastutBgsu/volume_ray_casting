@@ -34,37 +34,6 @@ object_plane_center = np.array([256/2, 256/2, 256/2])
 
 
 
-def calculate_ray_direction():
-    initialTransformation =  performInitialTransformation(initial_image_plane_center[0], initial_image_plane_center[1], initial_image_plane_center[2])
-    print(initialTransformation)
-    afterRotation = performRotation(initialTransformation)
-    final_image_plane_center = performFinalTransformation(afterRotation)
-    ray_direction = object_plane_center - initial_image_plane_center
-    ray_direction = ray_direction / np.linalg.norm(ray_direction)
-    return ray_direction
-
-
-rd = calculate_ray_direction()
-
-def calulate_intersection_point(x, y, z):
-    r0 = np.array([x, y, z])
-    pnAll = np.array([[0, 0, 1], [1,0,0], [0,1,0]])
-    # rd = np.array([0,0,1])
-    for pn in pnAll:
-        vd = np.dot(pn, rd)
-        D = np.array([0, -256])
-        t = 0
-        if(vd > 0) :
-            dot = np.dot(pn, r0)
-
-
-            sums = -(dot + D)
-            v0 = np.min(sums)
-            t = v0 / vd
-            xi = r0[0] + rd[0] * t
-            yi = r0[1] + rd[1] * t
-            zi = r0[2] + rd[2] * t
-            return np.array([xi, yi, zi])
 
 
 def calculateTransformationCoordinate():
@@ -86,13 +55,47 @@ def performRotation(transformedArray):
                                 [0, 1, 0],
                                 [-np.sin(angle_radians), 0, np.cos(angle_radians)]])
 
-    afterRotation = np.dot(transformedArray, rotation_matrix)
+    afterRotation = np.dot(rotation_matrix, transformedArray)
     return afterRotation
 
 def performFinalTransformation(rotatedArray):
 
     afterTransformation = rotatedArray + -(transformationCoordinate)
     return afterTransformation
+
+def calculate_ray_direction():
+    initialTransformation =  performInitialTransformation(initial_image_plane_center[0], initial_image_plane_center[1], initial_image_plane_center[2])
+    afterRotation = performRotation(initialTransformation)
+    final_image_plane_center = performFinalTransformation(afterRotation)
+    print('fia', final_image_plane_center)
+    ray_direction = object_plane_center - final_image_plane_center
+    print('di', ray_direction)
+    ray_direction = ray_direction / np.linalg.norm(ray_direction)
+
+    return ray_direction
+
+
+rd = calculate_ray_direction()
+def calulate_intersection_point(x, y, z):
+    r0 = np.array([x, y, z])
+    pnAll = np.array([[0, 0, 1], [1,0,0], [0,1,0]])
+    # rd = np.array([0,0,1])
+    for pn in pnAll:
+        vd = np.dot(pn, rd)
+        D = np.array([0, -256])
+        t = 0
+        if(vd > 0) :
+            dot = np.dot(pn, r0)
+
+
+            sums = -(dot + D)
+            v0 = np.min(sums)
+            t = v0 / vd
+            xi = r0[0] + rd[0] * t
+            yi = r0[1] + rd[1] * t
+            zi = r0[2] + rd[2] * t
+            return np.array([xi, yi, zi])
+
 
 def getOpacity(y, x, z):
     y = int(y)
@@ -131,7 +134,7 @@ def volumeRayCasting(x, y):
     while intersectionPoint[0] < 256 and intersectionPoint[1] < 256 and intersectionPoint[2] < 256:
         # perform interpolation
 
-
+        print('inter', intersectionPoint)
         opacity = getOpacity(*intersectionPoint)
         intensity = getIntensity(*intersectionPoint)
         intensityFinal += intensity * accumulated_opacity
